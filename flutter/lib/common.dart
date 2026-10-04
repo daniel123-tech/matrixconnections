@@ -259,12 +259,17 @@ class MyTheme {
   static const Color matrixBorder = Color(0xFF1A3D22);
 
   static const Color grayBg = Color(0xFFEEF4EF);
-  static const Color accent = Color(0xFF00C83A);
-  static const Color accent50 = Color(0x7700C83A);
-  static const Color accent80 = Color(0xAA00C83A);
+  // accent is used both as a highlight and as a background behind white text/icons,
+  // so it is a mid green (~3.5:1 with white, ~5.9:1 on black).
+  static const Color accent = Color(0xFF009E2A);
+  static const Color accent50 = Color(0x77009E2A);
+  static const Color accent80 = Color(0xAA009E2A);
   static const Color canvasColor = Color(0xFF0A0F0A);
   static const Color border = Color(0xFFC5D6C8);
   static const Color idColor = Color(0xFF00C83A);
+  static const Color matrixBubble = Color(0xFF24402B); // neutral dark green (chat, inactive buttons)
+  static const Color matrixBubbleHover = Color(0xFF1A3D22);
+  static const List<Color> matrixBannerGradient = [Color(0xFF00561B), Color(0xFF009E2A)];
   static const Color darkGray = Color.fromARGB(255, 148, 148, 148);
   static const Color cmIdColor = Color(0xFF21790B);
   static const Color dark = Colors.black87;
@@ -1181,7 +1186,7 @@ Widget createDialogContent(String text) {
     spans.add(TextSpan(
       text: match.group(0) ?? '',
       style: const TextStyle(
-        color: Colors.blue,
+        color: MyTheme.accent,
         decoration: TextDecoration.underline,
       ),
       recognizer: TapGestureRecognizer()
@@ -1344,10 +1349,10 @@ void msgBox(SessionID sessionId, String type, String title, String text,
 
 Color? _msgboxColor(String type) {
   if (type == "input-password" || type == "custom-os-password") {
-    return Color(0xFFAD448E);
+    return MyTheme.button;
   }
   if (type.contains("success")) {
-    return Color(0xFF32bea6);
+    return MyTheme.accent;
   }
   if (type.contains("error") || type == "re-input-password") {
     return Color(0xFFE04F5F);
@@ -1441,7 +1446,13 @@ Color str2color(String str, [alpha = 0xFF]) {
     hash = str.codeUnitAt(i) + ((hash << 5) - hash);
   }
   hash = hash % 16777216;
-  return Color((hash & 0xFF7FFF) | (alpha << 24));
+  // MatrixConnections: keep the per-peer/user variation, but only in dark Matrix greens
+  // (hue 115-155, darker shades so white text/icons stay readable).
+  final hue = 115.0 + (hash & 0xFF) / 255.0 * 40.0;
+  final saturation = 0.55 + ((hash >> 8) & 0xFF) / 255.0 * 0.45;
+  final lightness = 0.16 + ((hash >> 16) & 0x7F) / 127.0 * 0.16;
+  return HSLColor.fromAHSL((alpha & 0xFF) / 255.0, hue, saturation, lightness)
+      .toColor();
 }
 
 Color str2color2(String str, {List<int> existing = const []}) {

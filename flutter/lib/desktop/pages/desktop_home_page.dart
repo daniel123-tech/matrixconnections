@@ -32,7 +32,7 @@ class DesktopHomePage extends StatefulWidget {
   State<DesktopHomePage> createState() => _DesktopHomePageState();
 }
 
-const borderColor = Color(0xFF2F65BA);
+const borderColor = MyTheme.matrixBorder;
 
 class _DesktopHomePageState extends State<DesktopHomePage>
     with AutomaticKeepAliveClientMixin, WidgetsBindingObserver {
@@ -621,10 +621,7 @@ class _DesktopHomePageState extends State<DesktopHomePage>
                   gradient: LinearGradient(
                 begin: Alignment.centerLeft,
                 end: Alignment.centerRight,
-                colors: [
-                  Color.fromARGB(255, 226, 66, 188),
-                  Color.fromARGB(255, 244, 114, 124),
-                ],
+                colors: MyTheme.matrixBannerGradient,
               )),
               padding: EdgeInsets.all(20),
               child: Column(
@@ -1058,12 +1055,12 @@ void setPasswordDialog({VoidCallback? notEmptyCallback}) async {
                           e.name,
                           style: TextStyle(
                               color: checked
-                                  ? const Color(0xFF0A9471)
-                                  : Color.fromARGB(255, 198, 86, 157)),
+                                  ? MyTheme.matrixGreenDark
+                                  : const Color(0xFF6B7D6E)),
                         ),
                         backgroundColor: checked
-                            ? const Color(0xFFD0F7ED)
-                            : Color.fromARGB(255, 247, 205, 232));
+                            ? const Color(0xFFCCF5D6)
+                            : const Color(0xFFE6ECE7));
                   }).toList(),
                 ))
           ],

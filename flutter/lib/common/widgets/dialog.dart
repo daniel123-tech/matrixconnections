@@ -163,12 +163,12 @@ void changeIdDialog() {
                             e.name,
                             style: TextStyle(
                                 color: checked
-                                    ? const Color(0xFF0A9471)
-                                    : Color.fromARGB(255, 198, 86, 157)),
+                                    ? MyTheme.matrixGreenDark
+                                    : const Color(0xFF6B7D6E)),
                           ),
                           backgroundColor: checked
-                              ? const Color(0xFFD0F7ED)
-                              : Color.fromARGB(255, 247, 205, 232));
+                              ? const Color(0xFFCCF5D6)
+                              : const Color(0xFFE6ECE7));
                     }).toList(),
                   )).marginOnly(bottom: 8)
               : SizedBox.shrink(),

@@ -121,7 +121,7 @@ class _OnlineStatusWidgetState extends State<OnlineStatusWidget> {
                         stateGlobal.svcStatus.value == SvcStatus.connecting
                     ? kColorWarn
                     : (stateGlobal.svcStatus.value == SvcStatus.ready
-                        ? Color.fromARGB(255, 50, 190, 166)
+                        ? MyTheme.matrixGreen
                         : Color.fromARGB(255, 224, 79, 95)),
               ),
             ).marginSymmetric(horizontal: em),

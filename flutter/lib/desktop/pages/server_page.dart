@@ -462,8 +462,8 @@ class _CmHeaderState extends State<_CmHeader>
           begin: Alignment.topRight,
           end: Alignment.bottomLeft,
           colors: [
-            Color(0xff00bfe1),
-            Color(0xff0071ff),
+            MyTheme.accent,
+            Color(0xFF00561B),
           ],
         ),
       ),
@@ -1010,7 +1010,7 @@ class _CmControlPanel extends StatelessWidget {
         Offstage(
           offstage: !client.fromSwitch,
           child: buildButton(context,
-              color: Colors.purple,
+              color: MyTheme.button,
               onClick: () => handleSwitchBack(context),
               icon: Icon(Icons.reply, color: Colors.white),
               text: "Switch Sides",
