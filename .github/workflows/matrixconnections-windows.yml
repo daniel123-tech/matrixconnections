@@ -58,7 +58,7 @@ jobs:
           grep -n 'APP_NAME: RwLock<String> = RwLock::new("MatrixConnections"' libs/hbb_common/src/config.rs
           grep -n '^pub const RENDEZVOUS_SERVERS' libs/hbb_common/src/config.rs
           grep -n '^pub const RS_PUB_KEY' libs/hbb_common/src/config.rs
-          if grep -q 'rs-ny.rustdesk.com' libs/hbb_common/src/config.rs; then
+          if grep '^pub const RENDEZVOUS_SERVERS' libs/hbb_common/src/config.rs | grep -q 'rustdesk.com'; then
             echo "::error::Rendezvous server still points at the public RustDesk server"; exit 1
           fi
 
