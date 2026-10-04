@@ -167,31 +167,31 @@ class ColorThemeExtension extends ThemeExtension<ColorThemeExtension> {
   final Color? divider;
 
   static final light = ColorThemeExtension(
-    border: Color(0xFFCCCCCC),
-    border2: Color(0xFFBBBBBB),
+    border: Color(0xFFC5D6C8),
+    border2: Color(0xFFAFC7B4),
     border3: Colors.black26,
-    highlight: Color(0xFFE5E5E5),
+    highlight: Color(0xFFE2F0E4),
     drag_indicator: Colors.grey[800],
     shadow: Colors.black,
     errorBannerBg: Color(0xFFFDEEEB),
-    me: Colors.green,
+    me: Color(0xFF008F11),
     toastBg: Colors.black.withOpacity(0.6),
     toastText: Colors.white,
     divider: Colors.black38,
   );
 
   static final dark = ColorThemeExtension(
-    border: Color(0xFF555555),
-    border2: Color(0xFFE5E5E5),
-    border3: Colors.white24,
-    highlight: Color(0xFF3F3F3F),
-    drag_indicator: Colors.grey,
-    shadow: Colors.grey,
+    border: Color(0xFF1F4A2A),
+    border2: Color(0xFFBFEFC9),
+    border3: Color(0x3D00FF41),
+    highlight: Color(0xFF0F2A16),
+    drag_indicator: Color(0xFF5E8F69),
+    shadow: Color(0xFF0A3D18),
     errorBannerBg: Color(0xFF470F2D),
-    me: Colors.greenAccent,
-    toastBg: Colors.white.withOpacity(0.6),
+    me: Color(0xFF00FF41),
+    toastBg: Color(0xDD00FF41),
     toastText: Colors.black,
-    divider: Colors.white38,
+    divider: Color(0x6100FF41),
   );
 
   @override
@@ -248,18 +248,28 @@ class ColorThemeExtension extends ThemeExtension<ColorThemeExtension> {
 class MyTheme {
   MyTheme._();
 
-  static const Color grayBg = Color(0xFFEFEFF2);
-  static const Color accent = Color(0xFF0071FF);
-  static const Color accent50 = Color(0x770071FF);
-  static const Color accent80 = Color(0xAA0071FF);
-  static const Color canvasColor = Color(0xFF212121);
-  static const Color border = Color(0xFFCCCCCC);
-  static const Color idColor = Color(0xFF00B6F0);
+  // MatrixConnections palette: black backgrounds + Matrix greens.
+  static const Color matrixGreen = Color(0xFF00FF41); // bright highlight (dark theme)
+  static const Color matrixGreenDark = Color(0xFF007A1F); // readable green text on light bg
+  static const Color matrixText = Color(0xFFD6FFDD); // green-tinted white body text (dark)
+  static const Color matrixBg = Color(0xFF000000); // dark scaffold
+  static const Color matrixSurface = Color(0xFF07100A); // dark dialogs/menus
+  static const Color matrixCard = Color(0xFF0B140D); // dark cards/inputs/panels
+  static const Color matrixHover = Color(0xFF0F2A16);
+  static const Color matrixBorder = Color(0xFF1A3D22);
+
+  static const Color grayBg = Color(0xFFEEF4EF);
+  static const Color accent = Color(0xFF00C83A);
+  static const Color accent50 = Color(0x7700C83A);
+  static const Color accent80 = Color(0xAA00C83A);
+  static const Color canvasColor = Color(0xFF0A0F0A);
+  static const Color border = Color(0xFFC5D6C8);
+  static const Color idColor = Color(0xFF00C83A);
   static const Color darkGray = Color.fromARGB(255, 148, 148, 148);
   static const Color cmIdColor = Color(0xFF21790B);
   static const Color dark = Colors.black87;
-  static const Color button = Color(0xFF2C8CFF);
-  static const Color hoverBorder = Color(0xFF999999);
+  static const Color button = Color(0xFF008F11); // white text on this is ~4.3:1
+  static const Color hoverBorder = Color(0xFF5C8F68);
 
   // ListTile
   static const ListTileThemeData listTileTheme = ListTileThemeData(
@@ -360,11 +370,11 @@ class MyTheme {
   static ScrollbarThemeData scrollbarThemeDark = scrollbarTheme.copyWith(
     thumbColor: MaterialStateProperty.resolveWith<Color?>((states) {
       if (states.contains(MaterialState.dragged)) {
-        return Colors.grey[100];
+        return matrixGreen;
       } else if (states.contains(MaterialState.hovered)) {
-        return Colors.grey[300];
+        return Color(0xFF2FBF55);
       } else {
-        return Colors.grey[500];
+        return Color(0xFF1F7A35);
       }
     }),
   );
@@ -373,7 +383,7 @@ class MyTheme {
     // https://stackoverflow.com/questions/77537315/after-upgrading-to-flutter-3-16-the-app-bar-background-color-button-size-and
     useMaterial3: false,
     brightness: Brightness.light,
-    hoverColor: Color.fromARGB(255, 224, 224, 224),
+    hoverColor: Color(0xFFE2F0E4),
     scaffoldBackgroundColor: Colors.white,
     dialogBackgroundColor: Colors.white,
     appBarTheme: AppBarTheme(
@@ -406,7 +416,7 @@ class MyTheme {
         bodySmall: TextStyle(fontSize: 12, color: Colors.black87, height: 1.25),
         bodyMedium:
             TextStyle(fontSize: 14, color: Colors.black87, height: 1.25),
-        labelLarge: TextStyle(fontSize: 16.0, color: MyTheme.accent80)),
+        labelLarge: TextStyle(fontSize: 16.0, color: matrixGreenDark)),
     cardColor: grayBg,
     hintColor: Color(0xFFAAAAAA),
     visualDensity: VisualDensity.adaptivePlatformDensity,
@@ -429,7 +439,8 @@ class MyTheme {
         : mobileTextButtonTheme,
     elevatedButtonTheme: ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
-        backgroundColor: MyTheme.accent,
+        backgroundColor: MyTheme.button,
+        foregroundColor: Colors.white,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(8.0),
         ),
@@ -452,7 +463,9 @@ class MyTheme {
         style:
             MenuStyle(backgroundColor: MaterialStatePropertyAll(Colors.white))),
     colorScheme: ColorScheme.light(
-        primary: Colors.blue, secondary: accent, background: grayBg),
+        primary: button, secondary: accent, background: grayBg),
+    textSelectionTheme: TextSelectionThemeData(
+        cursorColor: button, selectionColor: accent50, selectionHandleColor: button),
     popupMenuTheme: PopupMenuThemeData(
         color: Colors.white,
         shape: RoundedRectangleBorder(
@@ -471,9 +484,10 @@ class MyTheme {
   static ThemeData darkTheme = ThemeData(
     useMaterial3: false,
     brightness: Brightness.dark,
-    hoverColor: Color.fromARGB(255, 45, 46, 53),
-    scaffoldBackgroundColor: Color(0xFF18191E),
-    dialogBackgroundColor: Color(0xFF18191E),
+    hoverColor: matrixHover,
+    scaffoldBackgroundColor: matrixBg,
+    dialogBackgroundColor: matrixSurface,
+    canvasColor: matrixSurface,
     appBarTheme: AppBarTheme(
       shadowColor: Colors.transparent,
     ),
@@ -483,36 +497,42 @@ class MyTheme {
         borderRadius: BorderRadius.circular(18.0),
         side: BorderSide(
           width: 1,
-          color: Color(0xFF24252B),
+          color: matrixBorder,
         ),
       ),
     ),
     scrollbarTheme: scrollbarThemeDark,
     inputDecorationTheme: (isDesktop || isWebDesktop)
         ? InputDecorationTheme(
-            fillColor: Color(0xFF24252B),
+            fillColor: matrixCard,
             filled: true,
             isDense: true,
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
             ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: BorderSide(color: matrixGreen, width: 1),
+            ),
           )
         : null,
     textTheme: const TextTheme(
-      titleLarge: TextStyle(fontSize: 19),
-      titleSmall: TextStyle(fontSize: 14),
-      bodySmall: TextStyle(fontSize: 12, height: 1.25),
-      bodyMedium: TextStyle(fontSize: 14, height: 1.25),
+      titleLarge: TextStyle(fontSize: 19, color: matrixText),
+      titleSmall: TextStyle(fontSize: 14, color: matrixText),
+      bodySmall: TextStyle(fontSize: 12, height: 1.25, color: matrixText),
+      bodyMedium: TextStyle(fontSize: 14, height: 1.25, color: matrixText),
       labelLarge: TextStyle(
         fontSize: 16.0,
         fontWeight: FontWeight.bold,
-        color: accent80,
+        color: matrixGreen,
       ),
     ),
-    cardColor: Color(0xFF24252B),
+    cardColor: matrixCard,
+    dividerColor: matrixBorder,
+    hintColor: Color(0xFF5E8F69),
     visualDensity: VisualDensity.adaptivePlatformDensity,
     tabBarTheme: const TabBarTheme(
-      labelColor: Colors.white70,
+      labelColor: matrixText,
     ),
     tooltipTheme: tooltipTheme(),
     splashColor: (isDesktop || isWebDesktop) ? Colors.transparent : null,
@@ -522,8 +542,8 @@ class MyTheme {
         ? TextButtonThemeData(
             style: TextButton.styleFrom(
               splashFactory: NoSplash.splashFactory,
-              disabledForegroundColor: Colors.white70,
-              foregroundColor: Colors.white70,
+              disabledForegroundColor: Colors.white38,
+              foregroundColor: Color(0xFF7DFF9B),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(18.0),
               ),
@@ -532,7 +552,7 @@ class MyTheme {
         : mobileTextButtonTheme,
     elevatedButtonTheme: ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
-        backgroundColor: MyTheme.accent,
+        backgroundColor: MyTheme.button,
         foregroundColor: Colors.white,
         disabledForegroundColor: Colors.white70,
         disabledBackgroundColor: Colors.white10,
@@ -543,10 +563,10 @@ class MyTheme {
     ),
     outlinedButtonTheme: OutlinedButtonThemeData(
       style: OutlinedButton.styleFrom(
-        backgroundColor: Color(0xFF24252B),
-        side: BorderSide(color: Colors.white12, width: 0.5),
-        disabledForegroundColor: Colors.white70,
-        foregroundColor: Colors.white70,
+        backgroundColor: matrixCard,
+        side: BorderSide(color: Color(0x5500FF41), width: 0.5),
+        disabledForegroundColor: Colors.white38,
+        foregroundColor: matrixText,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(8.0),
         ),
@@ -558,15 +578,23 @@ class MyTheme {
     listTileTheme: listTileTheme,
     menuBarTheme: MenuBarThemeData(
         style: MenuStyle(
-            backgroundColor: MaterialStatePropertyAll(Color(0xFF121212)))),
+            backgroundColor: MaterialStatePropertyAll(matrixSurface))),
     colorScheme: ColorScheme.dark(
-      primary: Colors.blue,
+      primary: matrixGreen,
+      onPrimary: Colors.black,
       secondary: accent,
-      background: Color(0xFF24252B),
+      onSecondary: Colors.black,
+      background: matrixCard,
+      surface: matrixSurface,
     ),
+    textSelectionTheme: TextSelectionThemeData(
+        cursorColor: matrixGreen,
+        selectionColor: Color(0x6600FF41),
+        selectionHandleColor: matrixGreen),
     popupMenuTheme: PopupMenuThemeData(
+        color: matrixSurface,
         shape: RoundedRectangleBorder(
-      side: BorderSide(color: Colors.white24),
+      side: BorderSide(color: Color(0x5500FF41)),
       borderRadius: BorderRadius.all(Radius.circular(8.0)),
     )),
   ).copyWith(
@@ -577,7 +605,10 @@ class MyTheme {
   );
 
   static ThemeMode getThemeModePreference() {
-    return themeModeFromString(bind.mainGetLocalOption(key: kCommConfKeyTheme));
+    final v = bind.mainGetLocalOption(key: kCommConfKeyTheme);
+    // MatrixConnections: default to the dark (Matrix) theme until the user picks one.
+    if (v.isEmpty) return ThemeMode.dark;
+    return themeModeFromString(v);
   }
 
   static Future<void> changeDarkMode(ThemeMode mode) async {
@@ -1321,7 +1352,7 @@ Color? _msgboxColor(String type) {
   if (type.contains("error") || type == "re-input-password") {
     return Color(0xFFE04F5F);
   }
-  return Color(0xFF2C8CFF);
+  return MyTheme.button;
 }
 
 Widget msgboxIcon(String type) {

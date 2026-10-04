@@ -240,6 +240,12 @@ class _DesktopHomePageState extends State<DesktopHomePage>
                         ),
                         style: TextStyle(
                           fontSize: 22,
+                          fontFamily: 'Consolas',
+                          fontFamilyFallback: const ['Courier New', 'monospace'],
+                          letterSpacing: 1.5,
+                          color: Theme.of(context).brightness == Brightness.dark
+                              ? MyTheme.matrixGreen
+                              : MyTheme.matrixGreenDark,
                         ),
                       ).workaroundFreezeLinuxMint(),
                     ),
@@ -336,7 +342,15 @@ class _DesktopHomePageState extends State<DesktopHomePage>
                               contentPadding:
                                   EdgeInsets.only(top: 14, bottom: 10),
                             ),
-                            style: TextStyle(fontSize: 15),
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontFamily: 'Consolas',
+                              fontFamilyFallback: const [
+                                'Courier New',
+                                'monospace'
+                              ],
+                              letterSpacing: 1.0,
+                            ),
                           ).workaroundFreezeLinuxMint(),
                         ),
                       ),
