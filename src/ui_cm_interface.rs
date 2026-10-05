@@ -810,6 +810,12 @@ impl<T: InvokeUiCM> IpcTaskRunner<T> {
                 }
             }
         }
+        // MatrixConnections privacy hardening: incoming transfers that did not finish (peer
+        // disconnected, connection dropped) must not leave `<file>.download` / `<file>.digest`
+        // remnants on this machine. `write_jobs` only lives for this run, so clean it up here.
+        for job in write_jobs.drain(..) {
+            job.remove_download_file();
+        }
     }
 
     async fn ipc_task(stream: Connection, cm: ConnectionManager<T>) {

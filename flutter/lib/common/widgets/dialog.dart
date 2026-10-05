@@ -968,11 +968,9 @@ _connectDialog(
   String? osAccountDescTip,
 }) async {
   final errUsername = ''.obs;
-  var rememberPassword = false;
-  if (passwordController != null) {
-    rememberPassword =
-        await bind.sessionGetRemember(sessionId: sessionId) ?? false;
-  }
+  // MatrixConnections privacy hardening: passwords are never remembered, so the
+  // "Remember password" checkbox is hidden and always off.
+  const rememberPassword = false;
   if (osUsernameController != null) {
     osUsernameController.addListener(() {
       if (errUsername.value.isNotEmpty) {
@@ -1032,21 +1030,6 @@ _connectDialog(
       );
     }
 
-    rememberWidget(
-      String desc,
-      bool remember,
-      ValueChanged<bool?>? onChanged,
-    ) {
-      return CheckboxListTile(
-        contentPadding: const EdgeInsets.all(0),
-        dense: true,
-        controlAffinity: ListTileControlAffinity.leading,
-        title: Text(desc),
-        value: remember,
-        onChanged: onChanged,
-      );
-    }
-
     osAccountWidget() {
       if (osUsernameController == null || osPasswordController == null) {
         return Offstage();
@@ -1090,15 +1073,6 @@ _connectDialog(
           PasswordWidget(
             controller: passwordController,
             autoFocus: osUsernameController == null,
-          ),
-          rememberWidget(
-            translate('Remember password'),
-            rememberPassword,
-            (v) {
-              if (v != null) {
-                setState(() => rememberPassword = v);
-              }
-            },
           ),
         ],
       );

@@ -1291,23 +1291,19 @@ impl<T: InvokeUiSession> Remote<T> {
         self.remove_jobs.remove(&id);
     }
 
+    /// MatrixConnections privacy hardening: called when the session ends. Upstream saved the
+    /// unfinished transfer jobs (with local and remote paths) into the peer file so they could be
+    /// resumed, and left the partial `<file>.download` / `<file>.digest` files on disk.
+    /// Here unfinished jobs are dropped, their partial files deleted, and any job list left by an
+    /// older build is cleared from the peer file.
     pub async fn sync_jobs_status_to_local(&mut self) -> bool {
-        if !self.is_connected {
-            return false;
+        for job in self.write_jobs.drain(..) {
+            job.remove_download_file();
         }
+        self.read_jobs.clear();
         let mut config: PeerConfig = self.handler.load_config();
-        let mut transfer_metas = TransferSerde::default();
-        for job in self.read_jobs.iter() {
-            let json_str = serde_json::to_string(&job.gen_meta()).unwrap_or_default();
-            transfer_metas.read_jobs.push(json_str);
-        }
-        for job in self.write_jobs.iter() {
-            let json_str = serde_json::to_string(&job.gen_meta()).unwrap_or_default();
-            transfer_metas.write_jobs.push(json_str);
-        }
-        log::info!("meta: {:?}", transfer_metas);
-        if config.transfer != transfer_metas {
-            config.transfer = transfer_metas;
+        if config.transfer != TransferSerde::default() {
+            config.transfer = TransferSerde::default();
             self.handler.save_config(config);
         }
         true

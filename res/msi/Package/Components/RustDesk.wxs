@@ -19,6 +19,9 @@
 		<CustomAction Id="TryStopDeleteService.SetParam" Return="check" Property="TryStopDeleteService" Value="$(var.Product)" />
 
 		<CustomAction Id="LaunchApp" ExeCommand="" Return="asyncNoWait" FileRef="App.exe" />
+		<!-- MatrixConnections privacy hardening: on a real uninstall (not an upgrade) delete config, peer history,
+		     logs and recordings for all users (user profiles, LocalService service profile, ProgramData). -->
+		<CustomAction Id="PurgeAppData" ExeCommand="--purge-data" FileRef="App.exe" Execute="deferred" Impersonate="no" Return="ignore" />
 		<CustomAction Id="LaunchAppTray" ExeCommand=" --tray" Return="asyncNoWait" FileRef="App.exe" />
 		<Property Id="TerminateProcesses" Value="AppTest.exe" />
 		<CustomAction Id="TerminateProcesses.SetParam" Return="check" Property="TerminateProcesses" Value="$(var.Product).exe" />
@@ -88,6 +91,8 @@
 			<Custom Action="RemoveRuntimeGeneratedFiles.SetParam" Before="RemoveRuntimeGeneratedFiles" Condition="Installed AND (REMOVE=&quot;ALL&quot; OR UPGRADINGPRODUCTCODE)"/>
 			<Custom Action="TryStopDeleteService" Before="RemoveRuntimeGeneratedFiles.SetParam" />
 			<Custom Action="TryStopDeleteService.SetParam" Before="TryStopDeleteService" />
+
+			<Custom Action="PurgeAppData" After="RemoveRuntimeGeneratedFiles" Condition="Installed AND REMOVE=&quot;ALL&quot; AND NOT UPGRADINGPRODUCTCODE"/>
 
 			<Custom Action="RemoveFirewallRules" Before="RemoveFiles"/>
 			<Custom Action="RemoveFirewallRules.SetParam" Before="RemoveFirewallRules"/>

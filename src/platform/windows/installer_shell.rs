@@ -18,7 +18,8 @@ use windows::{
         System::{Com, SystemInformation, Threading},
         UI::{
             Shell::{
-                self, FOLDERID_ProgramData, FOLDERID_Public, SHGetKnownFolderPath, KF_FLAG_DEFAULT,
+                self, FOLDERID_ProgramData, FOLDERID_Public, FOLDERID_RoamingAppData,
+                FOLDERID_UserProfiles, SHGetKnownFolderPath, KF_FLAG_DEFAULT,
             },
             WindowsAndMessaging,
         },
@@ -141,6 +142,21 @@ pub(super) fn path_for_cmd_assignment(path: &Path) -> ResultType<String> {
     Ok(path_for_cmd_environment(path)?
         .replace('^', "^^")
         .replace('!', "^!"))
+}
+
+/// MatrixConnections: trusted locations used by the uninstall data purge, resolved from the
+/// system (not from inherited environment variables):
+/// (Windows directory, ProgramData, user profiles root, current user's roaming AppData).
+pub(super) fn purge_known_folders() -> ResultType<(PathBuf, PathBuf, PathBuf, Option<PathBuf>)> {
+    let system = get_system_executable("")?;
+    let windows = system
+        .parent()
+        .ok_or_else(|| anyhow!("System directory has no parent"))?
+        .to_path_buf();
+    let program_data = get_known_folder(&FOLDERID_ProgramData)?;
+    let profiles = get_known_folder(&FOLDERID_UserProfiles)?;
+    let appdata = get_known_folder(&FOLDERID_RoamingAppData).ok();
+    Ok((windows, program_data, profiles, appdata))
 }
 
 pub(super) fn trusted_install_environment() -> ResultType<String> {

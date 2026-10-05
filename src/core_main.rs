@@ -39,6 +39,18 @@ pub fn core_main() -> Option<Vec<String>> {
         // return None to terminate the process
         return None;
     }
+    // MatrixConnections privacy hardening: `--purge-data` is run by the MSI on a real uninstall
+    // (as SYSTEM) to delete config, peer history, logs and recordings for all users. Handled
+    // before logging is initialized so no new log file is created in the folders being removed.
+    #[cfg(windows)]
+    if std::env::args().nth(1).as_deref() == Some("--purge-data") {
+        if crate::platform::is_elevated(None).unwrap_or(false) {
+            crate::platform::windows::purge_app_data();
+        } else {
+            eprintln!("--purge-data requires administrator privileges");
+        }
+        return None;
+    }
     let mut args = Vec::new();
     let mut flutter_args = Vec::new();
     let mut i = 0;

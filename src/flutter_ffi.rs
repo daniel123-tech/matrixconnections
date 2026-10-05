@@ -308,6 +308,27 @@ pub fn session_close(session_id: SessionID) {
         session.close_event_stream(session_id);
         session.close();
     }
+    // MatrixConnections privacy hardening: forget the peer once its last session is closed.
+    // Run once now and once a few seconds later, because the session's I/O loop and the window
+    // (position save) may still write to the peer file while shutting down.
+    std::thread::spawn(|| {
+        purge_peer_history();
+        std::thread::sleep(std::time::Duration::from_secs(5));
+        purge_peer_history();
+    });
+}
+
+/// MatrixConnections privacy hardening: "Recent sessions" is built from the peer files in
+/// `config\peers\<id>.toml`, so that folder is a connection history (who was accessed and when).
+/// Delete every peer file that is neither a favourite nor in use by an open session.
+fn purge_peer_history() {
+    let favs: std::collections::HashSet<String> = LocalConfig::get_fav().into_iter().collect();
+    let active = sessions::active_peer_ids();
+    for (id, _, path) in PeerConfig::get_vec_id_modified_time_path(&None) {
+        if !favs.contains(&id) && !active.contains(&id) {
+            std::fs::remove_file(&path).ok();
+        }
+    }
 }
 
 pub fn session_refresh(session_id: SessionID, display: usize) {
@@ -1469,6 +1490,8 @@ fn load_recent_peers(
 }
 
 pub fn main_load_recent_peers() {
+    // MatrixConnections privacy hardening: drop history left behind by earlier sessions/builds.
+    purge_peer_history();
     let push_to_flutter = |peers, ids| {
         let mut data = HashMap::from([("name", "load_recent_peers".to_owned()), ("peers", peers)]);
         if let Some(ids) = ids {

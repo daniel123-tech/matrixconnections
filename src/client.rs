@@ -2974,8 +2974,13 @@ impl LoginConfigHandler {
 
         self.id = id;
         self.conn_type = conn_type;
-        let config = self.load_config();
-        self.remember = !config.password.is_empty();
+        let mut config = self.load_config();
+        // MatrixConnections privacy hardening: ignore (and drop) any password stored by an
+        // older build; "remember password" is disabled.
+        self.remember = false;
+        if !config.password.is_empty() {
+            config.password = Default::default();
+        }
         self.config = config;
 
         let conn_token = conn_token
@@ -3683,16 +3688,20 @@ impl LoginConfigHandler {
             self.version = hbb_common::get_version_number(&pi.version);
         }
         self.features = pi.features.clone().into_option();
+        // MatrixConnections privacy hardening: never write the remote user name / host name
+        // into the peer file on disk (only the platform, used for the card icon).
         let serde = PeerInfoSerde {
-            username: pi.username.clone(),
-            hostname: pi.hostname.clone(),
+            username: String::new(),
+            hostname: String::new(),
             platform: pi.platform.clone(),
         };
         let mut config = self.load_config();
         config.info = serde;
         let password = self.password.clone();
         let password0 = config.password.clone();
-        let remember = self.remember;
+        // MatrixConnections privacy hardening: passwords are never remembered.
+        self.remember = false;
+        let remember = false;
         let hash = self.hash.clone();
         if remember {
             // remember is true: use PeerConfig password or ui login
@@ -4838,7 +4847,9 @@ pub async fn handle_login_from_ui(
         hasher.update(password);
         hasher.update(&lc.read().unwrap().hash.salt);
         let res = hasher.finalize();
-        lc.write().unwrap().remember = remember;
+        // MatrixConnections privacy hardening: "remember password" is always off.
+        let _ = remember;
+        lc.write().unwrap().remember = false;
         res[..].into()
     };
     lc.write().unwrap().password = hash_password.clone();

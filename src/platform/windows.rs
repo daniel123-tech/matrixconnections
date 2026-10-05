@@ -1808,6 +1808,101 @@ fn get_before_uninstall(kill_self: bool) -> String {
     )
 }
 
+/// MatrixConnections privacy hardening: batch commands run at the end of a real uninstall
+/// (never on install/upgrade) that remove everything the app leaves on disk: config, peer
+/// history, logs (user + LocalService service profile), recordings, and the legacy
+/// Recent Items / %TEMP% markers of older builds - for every local user profile.
+/// All locations are resolved from the system, not from inherited environment variables.
+fn get_purge_app_data_cmds() -> ResultType<String> {
+    let app_name = crate::get_app_name();
+    let ext = app_name.to_lowercase();
+    let (windows_dir, program_data, profiles, appdata) = installer_shell::purge_known_folders()?;
+    let q = |p: PathBuf| -> ResultType<String> {
+        Ok(installer_shell::path_for_cmd_environment(&p)?.to_owned())
+    };
+    let local_service = q(windows_dir
+        .join("ServiceProfiles\\LocalService\\AppData\\Roaming")
+        .join(&app_name))?;
+    let program_data = q(program_data.join(&app_name))?;
+    let profiles = q(profiles)?;
+    let appdata = match appdata {
+        Some(p) => {
+            let p = q(p.join(&app_name))?;
+            format!("if exist \"{p}\" rd /s /q \"{p}\"")
+        }
+        None => "".to_owned(),
+    };
+    Ok(format!(
+        "
+    {appdata}
+    if exist \"{local_service}\" rd /s /q \"{local_service}\"
+    if exist \"{program_data}\" rd /s /q \"{program_data}\"
+    for /d %%u in (\"{profiles}\\*\") do (
+        if exist \"%%~u\\AppData\\Roaming\\{app_name}\" rd /s /q \"%%~u\\AppData\\Roaming\\{app_name}\"
+        if exist \"%%~u\\Videos\\{app_name}\" rd /s /q \"%%~u\\Videos\\{app_name}\"
+        del /f /q \"%%~u\\AppData\\Roaming\\Microsoft\\Windows\\Recent\\*.{ext}.lnk\" 2>nul
+        del /f /q \"%%~u\\AppData\\Local\\Temp\\*.{ext}\" 2>nul
+    )
+    "
+    ))
+}
+
+/// MatrixConnections privacy hardening: same as [`get_purge_app_data_cmds`], implemented in
+/// Rust for the MSI uninstall (`MatrixConnections.exe --purge-data`, run as SYSTEM).
+pub fn purge_app_data() {
+    let app_name = crate::get_app_name();
+    let ext = app_name.to_lowercase();
+    let rm_dir = |p: PathBuf| {
+        if p.is_dir() {
+            if let Err(e) = std::fs::remove_dir_all(&p) {
+                eprintln!("failed to remove {}: {}", p.display(), e);
+            }
+        }
+    };
+    let rm_matching = |dir: PathBuf, suffix: &str| {
+        if let Ok(rd) = std::fs::read_dir(&dir) {
+            for e in rd.flatten() {
+                let name = e.file_name().to_string_lossy().to_lowercase();
+                if name.ends_with(suffix) && e.path().is_file() {
+                    std::fs::remove_file(e.path()).ok();
+                }
+            }
+        }
+    };
+    let (windows_dir, program_data, profiles, appdata) =
+        match installer_shell::purge_known_folders() {
+            Ok(v) => v,
+            Err(e) => {
+                eprintln!("failed to resolve known folders: {}", e);
+                return;
+            }
+        };
+    rm_dir(
+        windows_dir
+            .join("ServiceProfiles\\LocalService\\AppData\\Roaming")
+            .join(&app_name),
+    );
+    rm_dir(program_data.join(&app_name));
+    if let Some(appdata) = appdata {
+        rm_dir(appdata.join(&app_name));
+    }
+    if let Ok(users) = std::fs::read_dir(&profiles) {
+        for u in users.flatten() {
+            let home = u.path();
+            if !home.is_dir() {
+                continue;
+            }
+            rm_dir(home.join("AppData\\Roaming").join(&app_name));
+            rm_dir(home.join("Videos").join(&app_name));
+            rm_matching(
+                home.join("AppData\\Roaming\\Microsoft\\Windows\\Recent"),
+                &format!(".{}.lnk", ext),
+            );
+            rm_matching(home.join("AppData\\Local\\Temp"), &format!(".{}", ext));
+        }
+    }
+}
+
 /// Constructs the uninstall command string for the application.
 ///
 /// # Parameters
@@ -1821,6 +1916,14 @@ fn get_before_uninstall(kill_self: bool) -> String {
 /// is included in the generated uninstall script. If `uninstall_printer` is `false`, the printer
 /// related command is omitted from the script.
 fn get_uninstall(kill_self: bool, uninstall_printer: bool) -> ResultType<String> {
+    get_uninstall_(kill_self, uninstall_printer, false)
+}
+
+fn get_uninstall_(
+    kill_self: bool,
+    uninstall_printer: bool,
+    purge_app_data: bool,
+) -> ResultType<String> {
     let (subkey, path, start_menu, _) = get_install_info();
     let installer_state = get_windows_installer_state(&subkey)?;
     if let Some(product_code) = get_msi_product_code(&subkey, installer_state)? {
@@ -1851,15 +1954,25 @@ fn get_uninstall(kill_self: bool, uninstall_printer: bool) -> ResultType<String>
     if exist \"{start_menu}\" rd /s /q \"{start_menu}\"
     if exist \"%PUBLIC%\\Desktop\\{app_name}.lnk\" del /f /q \"%PUBLIC%\\Desktop\\{app_name}.lnk\"
     if exist \"%PROGRAMDATA%\\Microsoft\\Windows\\Start Menu\\Programs\\Startup\\{app_name} Tray.lnk\" del /f /q \"%PROGRAMDATA%\\Microsoft\\Windows\\Start Menu\\Programs\\Startup\\{app_name} Tray.lnk\"
+    {purge}
     ",
         before_uninstall=get_before_uninstall(kill_self),
         uninstall_amyuni_idd=get_uninstall_amyuni_idd(),
         app_name = crate::get_app_name(),
+        purge = if purge_app_data {
+            get_purge_app_data_cmds().unwrap_or_else(|e| {
+                log::error!("Failed to build the app data purge commands: {}", e);
+                "".to_owned()
+            })
+        } else {
+            "".to_owned()
+        },
     ))
 }
 
 pub fn uninstall_me(kill_self: bool) -> ResultType<()> {
-    run_cmds(get_uninstall(kill_self, true)?, true, "uninstall")
+    // MatrixConnections: a real uninstall also wipes all app data (see get_purge_app_data_cmds).
+    run_cmds(get_uninstall_(kill_self, true, true)?, true, "uninstall")
 }
 
 fn write_vbs(cmds: String, tip: &str) -> ResultType<PathBuf> {

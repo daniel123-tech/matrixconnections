@@ -2306,6 +2306,17 @@ pub mod sessions {
         SESSIONS.read().unwrap().values().cloned().collect()
     }
 
+    /// MatrixConnections: peer IDs that currently have an open session (any connection type).
+    /// Both the raw key and the normalized ID (relay suffix stripped) are returned.
+    pub fn active_peer_ids() -> std::collections::HashSet<String> {
+        let mut ids = std::collections::HashSet::new();
+        for ((peer_id, _), _) in SESSIONS.read().unwrap().iter() {
+            ids.insert(peer_id.clone());
+            ids.insert(crate::ui_interface::handle_relay_id(peer_id).to_owned());
+        }
+        ids
+    }
+
     #[inline]
     #[cfg(not(target_os = "ios"))]
     pub fn has_sessions_running(conn_type: ConnType) -> bool {
